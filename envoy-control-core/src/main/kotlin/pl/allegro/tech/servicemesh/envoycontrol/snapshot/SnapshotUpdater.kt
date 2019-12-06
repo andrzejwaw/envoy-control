@@ -34,8 +34,8 @@ class SnapshotUpdater(
 
     fun start(changes: Flux<List<LocalityAwareServicesState>>): Flux<UpdateResult> {
         return Flux.merge(
-                services(changes),
-                groups()
+            services(changes),
+            groups()
         ).doOnNext { result ->
             val groups = if (result.action == Action.ALL_GROUPS) {
                 cache.groups()
@@ -44,43 +44,52 @@ class SnapshotUpdater(
             }
 
             versions.retainGroups(cache.groups())
-            groups.forEach { group ->
-                if (group.ads) {
-                    updateSnapshotForGroup(group, lastAdsSnapshot)
-                } else {
-                    updateSnapshotForGroup(group, lastXdsSnapshot)
+            groups
+                .filter { group ->
+                    result.services.isEmpty() || result.services.any {
+                        group.proxySettings.outgoing.containsDependencyForService(it)
+                    }
                 }
-            }
+                .forEach { group ->
+                    if (group.ads) {
+                        updateSnapshotForGroup(group, lastAdsSnapshot)
+                    } else {
+                        updateSnapshotForGroup(group, lastXdsSnapshot)
+                    }
+                }
         }
     }
 
     fun groups(): Flux<UpdateResult> {
         // see GroupChangeWatcher
         return onGroupAdded
-                .publishOn(scheduler)
-                .map { groups ->
-                    UpdateResult(action = Action.SELECTED_GROUPS, groups = groups)
-                }
-                .onErrorResume { e ->
-                    meterRegistry.counter("snapshot-updater.groups.updates.errors").increment()
-                    logger.error("Unable to process new group", e)
-                    Mono.justOrEmpty(UpdateResult(action = Action.ERROR))
-                }
+            .publishOn(scheduler)
+            .map { groups ->
+                UpdateResult(action = Action.SELECTED_GROUPS, groups = groups)
+            }
+            .onErrorResume { e ->
+                meterRegistry.counter("snapshot-updater.groups.updates.errors").increment()
+                logger.error("Unable to process new group", e)
+                Mono.justOrEmpty(UpdateResult(action = Action.ERROR))
+            }
     }
 
     fun services(changes: Flux<List<LocalityAwareServicesState>>): Flux<UpdateResult> {
         return changes
-                .sample(properties.stateSampleDuration)
-                .publishOn(scheduler)
-                .map { states ->
-                    updateSnapshots(states)
-                    UpdateResult(action = Action.ALL_GROUPS)
-                }
-                .onErrorResume { e ->
-                    meterRegistry.counter("snapshot-updater.services.updates.errors").increment()
-                    logger.error("Unable to process service changes", e)
-                    Mono.justOrEmpty(UpdateResult(action = Action.ALL_GROUPS))
-                }
+            .sample(properties.stateSampleDuration)
+            .publishOn(scheduler)
+            .map { states ->
+                updateSnapshots(states)
+                UpdateResult(
+                    action = Action.ALL_GROUPS,
+                    services = states.map { it.servicesState.currentChange }.toList()
+                )
+            }
+            .onErrorResume { e ->
+                meterRegistry.counter("snapshot-updater.services.updates.errors").increment()
+                logger.error("Unable to process service changes", e)
+                Mono.justOrEmpty(UpdateResult(action = Action.ALL_GROUPS))
+            }
     }
 
     private fun updateSnapshots(states: List<LocalityAwareServicesState>) {
@@ -103,4 +112,4 @@ enum class Action {
     SELECTED_GROUPS, ALL_GROUPS, ERROR
 }
 
-class UpdateResult(val action: Any, val groups: List<Group> = listOf())
+class UpdateResult(val action: Any, val groups: List<Group> = listOf(), val services: List<String> = emptyList())

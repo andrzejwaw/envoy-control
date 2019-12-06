@@ -24,7 +24,7 @@ class ConsulLocalServiceChanges(
                         transformer.transform(instancesSequence)
                     }
                     .associateBy { it.serviceName }
-                    .let(::ServicesState)
+                    .let { ServicesState(serviceNameToInstances = it, currentChange = state.currentChange) }
             }
             .doOnNext { latestServiceState.set(it) }
             .map {

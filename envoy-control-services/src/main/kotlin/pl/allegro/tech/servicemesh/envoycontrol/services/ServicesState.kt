@@ -3,8 +3,10 @@ package pl.allegro.tech.servicemesh.envoycontrol.services
 typealias ServiceName = String
 
 data class ServicesState(
-    val serviceNameToInstances: Map<ServiceName, ServiceInstances> = emptyMap()
+    val serviceNameToInstances: Map<ServiceName, ServiceInstances> = emptyMap(),
+    var currentChange: String = ""
 ) {
+
     operator fun get(serviceName: ServiceName): ServiceInstances? = serviceNameToInstances[serviceName]
 
     fun hasService(serviceName: String): Boolean = serviceNameToInstances.containsKey(serviceName)
@@ -20,7 +22,14 @@ data class ServicesState(
         if (serviceNameToInstances.containsKey(serviceName)) this
         else change(ServiceInstances(serviceName, instances = emptySet()))
 
-    fun change(serviceInstances: ServiceInstances): ServicesState =
-        if (serviceNameToInstances[serviceInstances.serviceName] == serviceInstances) this
-        else copy(serviceNameToInstances = serviceNameToInstances + (serviceInstances.serviceName to serviceInstances))
+    fun change(serviceInstances: ServiceInstances): ServicesState {
+        return if (serviceNameToInstances[serviceInstances.serviceName] == serviceInstances)
+            this
+        else {
+            copy(
+                serviceNameToInstances = serviceNameToInstances + (serviceInstances.serviceName to serviceInstances),
+                currentChange = serviceInstances.serviceName
+            )
+        }
+    }
 }
