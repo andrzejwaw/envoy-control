@@ -82,7 +82,7 @@ class SnapshotUpdater(
                 updateSnapshots(states)
                 UpdateResult(
                     action = Action.ALL_GROUPS,
-                    services = states.map { it.servicesState.currentChange }.toList()
+                    services = states.flatMap { it.servicesState.currentChange }.toSet()
                 )
             }
             .onErrorResume { e ->
@@ -112,4 +112,4 @@ enum class Action {
     SELECTED_GROUPS, ALL_GROUPS, ERROR
 }
 
-class UpdateResult(val action: Any, val groups: List<Group> = listOf(), val services: List<String> = emptyList())
+class UpdateResult(val action: Any, val groups: List<Group> = listOf(), val services: Set<String> = emptySet())

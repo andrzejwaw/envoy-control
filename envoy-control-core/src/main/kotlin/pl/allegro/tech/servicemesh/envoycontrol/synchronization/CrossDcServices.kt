@@ -1,9 +1,11 @@
 package pl.allegro.tech.servicemesh.envoycontrol.synchronization
 
+import com.google.common.collect.Maps
 import io.micrometer.core.instrument.MeterRegistry
 import pl.allegro.tech.servicemesh.envoycontrol.logger
 import pl.allegro.tech.servicemesh.envoycontrol.services.Locality
 import pl.allegro.tech.servicemesh.envoycontrol.services.LocalityAwareServicesState
+import pl.allegro.tech.servicemesh.envoycontrol.services.ServicesState
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.net.URI
@@ -61,7 +63,12 @@ class CrossDcServices(
         return controlPlaneClient
             .getState(instance)
             .map {
-                LocalityAwareServicesState(it, Locality.REMOTE, dc)
+                val diffs = Maps
+                    .difference(dcServicesCache[dc]?.servicesState?.serviceNameToInstances
+                        ?: emptyMap(), it.serviceNameToInstances)
+                    .entriesDiffering()
+                    .keys
+                LocalityAwareServicesState(ServicesState(it.serviceNameToInstances, diffs), Locality.REMOTE, dc)
             }
             .doOnSuccess {
                 dcServicesCache += dc to it

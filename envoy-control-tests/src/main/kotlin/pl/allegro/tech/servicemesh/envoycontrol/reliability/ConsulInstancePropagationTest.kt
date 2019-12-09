@@ -24,8 +24,8 @@ class ConsulInstancePropagationTest : EnvoyControlTestConfiguration() {
         private val logger by logger()
 
         private const val verificationTimes = 1
-        private const val services = 20
-        private const val repeatScenarios = 10
+        private const val services = 400
+        private const val repeatScenarios = 50
 
         @JvmStatic
         @BeforeAll

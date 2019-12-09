@@ -4,7 +4,7 @@ typealias ServiceName = String
 
 data class ServicesState(
     val serviceNameToInstances: Map<ServiceName, ServiceInstances> = emptyMap(),
-    var currentChange: String = ""
+    var currentChange: Set<String> = emptySet()
 ) {
 
     operator fun get(serviceName: ServiceName): ServiceInstances? = serviceNameToInstances[serviceName]
@@ -28,7 +28,7 @@ data class ServicesState(
         else {
             copy(
                 serviceNameToInstances = serviceNameToInstances + (serviceInstances.serviceName to serviceInstances),
-                currentChange = serviceInstances.serviceName
+                currentChange = setOf(serviceInstances.serviceName)
             )
         }
     }

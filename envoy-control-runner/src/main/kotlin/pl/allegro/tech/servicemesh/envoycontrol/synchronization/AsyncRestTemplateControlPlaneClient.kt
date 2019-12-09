@@ -9,6 +9,11 @@ class AsyncRestTemplateControlPlaneClient(val asyncRestTemplate: AsyncRestTempla
     override fun getState(uri: URI): Mono<ServicesState> =
         asyncRestTemplate.getForEntity<ServicesState>("$uri/state", ServicesState::class.java)
             .completable()
-            .thenApply { it.body }
+            .thenApply {
+                ServicesState(
+                    serviceNameToInstances = it.body.serviceNameToInstances,
+                    currentChange = emptySet()
+                )
+            }
             .let { Mono.fromCompletionStage(it) }
 }
