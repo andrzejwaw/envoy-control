@@ -11,8 +11,7 @@ class AsyncRestTemplateControlPlaneClient(val asyncRestTemplate: AsyncRestTempla
             .completable()
             .thenApply {
                 ServicesState(
-                    serviceNameToInstances = it.body.serviceNameToInstances,
-                    currentChange = emptySet()
+                    serviceNameToInstances = it.body.serviceNameToInstances
                 )
             }
             .let { Mono.fromCompletionStage(it) }

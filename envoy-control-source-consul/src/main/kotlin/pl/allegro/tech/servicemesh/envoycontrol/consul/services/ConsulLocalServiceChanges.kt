@@ -24,7 +24,11 @@ class ConsulLocalServiceChanges(
                         transformer.transform(instancesSequence)
                     }
                     .associateBy { it.serviceName }
-                    .let { ServicesState(serviceNameToInstances = it, currentChange = state.currentChange) }
+                    .let {
+                        val servicesState = ServicesState(serviceNameToInstances = it)
+                        servicesState.currentChange = state.currentChange
+                        servicesState
+                    }
             }
             .doOnNext { latestServiceState.set(it) }
             .map {

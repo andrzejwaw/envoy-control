@@ -68,7 +68,9 @@ class CrossDcServices(
                         ?: emptyMap(), it.serviceNameToInstances)
                     .entriesDiffering()
                     .keys
-                LocalityAwareServicesState(ServicesState(it.serviceNameToInstances, diffs), Locality.REMOTE, dc)
+                val servicesState = ServicesState(it.serviceNameToInstances)
+                servicesState.currentChange = diffs
+                LocalityAwareServicesState(servicesState, Locality.REMOTE, dc)
             }
             .doOnSuccess {
                 dcServicesCache += dc to it
