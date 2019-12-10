@@ -6,6 +6,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import pl.allegro.tech.servicemesh.envoycontrol.groups.Group
 import pl.allegro.tech.servicemesh.envoycontrol.logger
 import pl.allegro.tech.servicemesh.envoycontrol.services.LocalityAwareServicesState
+import pl.allegro.tech.servicemesh.envoycontrol.services.ServicesState
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Scheduler
@@ -37,19 +38,19 @@ class SnapshotUpdater(
             services(changes),
             groups()
         ).doOnNext { result ->
-            val groups = if (result.action == Action.ALL_GROUPS) {
-                cache.groups()
-            } else {
-                result.groups
+            val groups = when {
+                result.action == Action.ALL_GROUPS -> cache.groups()
+                result.action == Action.SELECTED_GROUPS -> cache.groups().filter {
+                    !it.isGlobalGroup() &&
+                    result.services.any { change ->
+                        it.proxySettings.outgoing.containsDependencyForService(change.serviceName)
+                    }
+                }.toList()
+                else -> result.groups
             }
 
-            versions.retainGroups(cache.groups())
+            versions.retainGroups(groups)
             groups
-                .filter { group ->
-                    result.services.isEmpty() || result.services.any {
-                        group.proxySettings.outgoing.containsDependencyForService(it)
-                    }
-                }
                 .forEach { group ->
                     if (group.ads) {
                         updateSnapshotForGroup(group, lastAdsSnapshot)
@@ -81,7 +82,7 @@ class SnapshotUpdater(
             .map { states ->
                 updateSnapshots(states)
                 UpdateResult(
-                    action = Action.ALL_GROUPS,
+                    action = Action.SELECTED_GROUPS,
                     services = states.flatMap { it.servicesState.currentChange }.toSet()
                 )
             }
@@ -112,4 +113,4 @@ enum class Action {
     SELECTED_GROUPS, ALL_GROUPS, ERROR
 }
 
-class UpdateResult(val action: Any, val groups: List<Group> = listOf(), val services: Set<String> = emptySet())
+class UpdateResult(val action: Any, val groups: List<Group> = listOf(), val services: Set<ServicesState.Change> = emptySet())

@@ -66,10 +66,18 @@ class CrossDcServices(
                 val diffs = Maps
                     .difference(dcServicesCache[dc]?.servicesState?.serviceNameToInstances
                         ?: emptyMap(), it.serviceNameToInstances)
-                    .entriesDiffering()
-                    .keys
+                val removed = diffs.entriesOnlyOnLeft().keys.map {
+                    ServicesState.Change(action = ServicesState.Action.REMOVE, serviceName = it)
+                }.toSet()
+                val added = diffs.entriesOnlyOnRight().keys.map {
+                    ServicesState.Change(action = ServicesState.Action.ADD, serviceName = it)
+                }.toSet()
+                val updated = diffs.entriesDiffering().keys.map {
+                    ServicesState.Change(action = ServicesState.Action.UPDATE, serviceName = it)
+                }.toSet()
                 val servicesState = ServicesState(it.serviceNameToInstances)
-                servicesState.currentChange = diffs
+
+                servicesState.currentChange = added + removed + updated
                 LocalityAwareServicesState(servicesState, Locality.REMOTE, dc)
             }
             .doOnSuccess {
