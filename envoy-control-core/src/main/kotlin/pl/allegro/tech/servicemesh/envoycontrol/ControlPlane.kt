@@ -18,6 +18,7 @@ import pl.allegro.tech.servicemesh.envoycontrol.server.CachedProtoResourcesSeria
 import pl.allegro.tech.servicemesh.envoycontrol.server.ExecutorType
 import pl.allegro.tech.servicemesh.envoycontrol.server.ServerProperties
 import pl.allegro.tech.servicemesh.envoycontrol.server.callbacks.CompositeDiscoveryServerCallbacks
+import pl.allegro.tech.servicemesh.envoycontrol.server.callbacks.ConnectedEnvoyStatusCallback
 import pl.allegro.tech.servicemesh.envoycontrol.server.callbacks.LoggingDiscoveryServerCallbacks
 import pl.allegro.tech.servicemesh.envoycontrol.server.callbacks.MeteredConnectionsCallbacks
 import pl.allegro.tech.servicemesh.envoycontrol.services.LocalityAwareServicesState
@@ -135,7 +136,8 @@ class ControlPlane private constructor(
                                 meterRegistry.gauge("grpc.connections.${type.name.toLowerCase()}", it.connections(type))
                             }
                         },
-                        NodeMetadataValidator(properties.envoy.snapshot)
+                        NodeMetadataValidator(properties.envoy.snapshot),
+                        ConnectedEnvoyStatusCallback(properties.envoy.snapshot)
                     )
                 ),
                 groupChangeWatcher,
