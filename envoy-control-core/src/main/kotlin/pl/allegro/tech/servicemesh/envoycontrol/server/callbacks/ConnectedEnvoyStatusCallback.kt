@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.envoyproxy.controlplane.server.DiscoveryServerCallbacks
 import io.envoyproxy.envoy.api.v2.DiscoveryRequest
 import org.slf4j.LoggerFactory
-import pl.allegro.tech.servicemesh.envoycontrol.groups.NodeMetadata
 import pl.allegro.tech.servicemesh.envoycontrol.services.ServiceName
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotProperties
 import java.util.concurrent.ConcurrentHashMap
@@ -34,16 +33,11 @@ class ConnectedEnvoyStatusCallback(val properties: SnapshotProperties) : Discove
     }
 
     override fun onStreamRequest(streamId: Long, request: DiscoveryRequest?) {
-        val identity = request?.node?.let { it ->
-            val metadata = NodeMetadata(it.metadata, properties)
-            metadata.identity ?: EMPTY
+        val nodeInformation = request?.node?.let { it ->
+            "nodeId: ${it.id} clusterId: ${it.cluster}"
         } ?: EMPTY
 
-        val serviceName = request?.node?.let { it ->
-            val metadata = NodeMetadata(it.metadata, properties)
-            metadata.serviceName ?: EMPTY
-        } ?: EMPTY
-        connectedEnvoys[streamId] = "identity: " + identity + "serviceName: " + serviceName
+        connectedEnvoys[streamId] = nodeInformation
     }
 
     override fun onStreamOpen(streamId: Long, typeUrl: String?) {
