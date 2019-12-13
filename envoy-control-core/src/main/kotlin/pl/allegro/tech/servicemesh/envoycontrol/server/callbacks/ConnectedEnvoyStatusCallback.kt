@@ -6,25 +6,27 @@ import org.slf4j.LoggerFactory
 import pl.allegro.tech.servicemesh.envoycontrol.groups.NodeMetadata
 import pl.allegro.tech.servicemesh.envoycontrol.services.ServiceName
 import pl.allegro.tech.servicemesh.envoycontrol.snapshot.SnapshotProperties
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-
 
 class ConnectedEnvoyStatusCallback(val properties: SnapshotProperties) : DiscoveryServerCallbacks {
 
     private val logger = LoggerFactory.getLogger(ConnectedEnvoyStatusCallback::class.java)
     private val executor = Executors.newSingleThreadScheduledExecutor()
-    private val connectedEnvoys: MutableMap<Long, ServiceName> = mutableMapOf()
+    private val connectedEnvoys: ConcurrentHashMap<Long, ServiceName> = ConcurrentHashMap()
     private val task: Runnable = Runnable {
-        logger.info("Current services connected: {}", connectedEnvoys.values.filter { it.isNotBlank() })
+        logger.info("Current services connected: {}", connectedEnvoys.values.filter { it.isNotBlank() }.distinct())
     }
 
     companion object {
         private const val EMPTY_SERVICE = ""
+        private const val INITIAL_DELAY = 300L
+        private const val LOG_PERIOD = 10L
     }
 
     init {
-        executor.scheduleAtFixedRate(task, 120, 10, TimeUnit.SECONDS)
+        executor.scheduleAtFixedRate(task, INITIAL_DELAY, LOG_PERIOD, TimeUnit.SECONDS)
     }
 
     override fun onStreamRequest(streamId: Long, request: DiscoveryRequest?) {
@@ -46,6 +48,4 @@ class ConnectedEnvoyStatusCallback(val properties: SnapshotProperties) : Discove
     override fun onStreamCloseWithError(streamId: Long, typeUrl: String?, error: Throwable?) {
         connectedEnvoys.remove(streamId)
     }
-
-
 }
