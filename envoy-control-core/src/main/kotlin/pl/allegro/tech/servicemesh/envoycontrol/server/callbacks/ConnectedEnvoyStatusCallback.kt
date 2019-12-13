@@ -33,8 +33,13 @@ class ConnectedEnvoyStatusCallback(val properties: SnapshotProperties) : Discove
     }
 
     override fun onStreamRequest(streamId: Long, request: DiscoveryRequest?) {
+        val identity: String? = request?.node?.metadata?.fieldsMap?.get("identity")?.stringValue
         val nodeInformation = request?.node?.let { it ->
-            "nodeId: ${it.id} clusterId: ${it.cluster}"
+            if (identity.isNullOrBlank()) {
+                "${it.id} : ${it.cluster}"
+            } else {
+                "$identity : ${it.cluster}"
+            }
         } ?: EMPTY
 
         connectedEnvoys[streamId] = nodeInformation
