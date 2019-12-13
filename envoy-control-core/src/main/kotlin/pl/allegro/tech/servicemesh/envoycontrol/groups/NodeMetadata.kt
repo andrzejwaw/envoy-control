@@ -16,6 +16,9 @@ class NodeMetadata(metadata: Struct, properties: SnapshotProperties) {
     val serviceName: String? = metadata
         .fieldsMap["service_name"]
         ?.stringValue
+    val identity: String? = metadata
+        .fieldsMap["identity"]
+        ?.stringValue
 
     val proxySettings: ProxySettings = ProxySettings(metadata.fieldsMap["proxy_settings"], properties)
 }
