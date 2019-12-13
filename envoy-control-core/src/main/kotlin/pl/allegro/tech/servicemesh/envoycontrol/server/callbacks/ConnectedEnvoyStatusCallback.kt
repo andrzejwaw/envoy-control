@@ -25,7 +25,7 @@ class ConnectedEnvoyStatusCallback(val properties: SnapshotProperties) : Discove
 
     companion object {
         private const val EMPTY = ""
-        private const val INITIAL_DELAY = 300L
+        private const val INITIAL_DELAY = 120L
         private const val LOG_PERIOD = 10L
     }
 
