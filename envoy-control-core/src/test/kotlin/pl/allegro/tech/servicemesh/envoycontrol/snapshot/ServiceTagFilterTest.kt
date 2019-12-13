@@ -7,7 +7,7 @@ internal class ServiceTagFilterTest {
 
     private val filter = ServiceTagFilter(ServiceTagsProperties().apply {
         enabled = true
-        routingExcludedTags = mutableListOf(".*id.*", "port:.*")
+        routingExcludedTags = mutableListOf("id", "port:")
         allowedTagsCombinations = mutableListOf(
             ServiceTagsCombinationsProperties().apply {
                 serviceName = "two-tags-allowed-service"
@@ -48,7 +48,7 @@ internal class ServiceTagFilterTest {
         // when
         val routingTags = filter.getAllTagsForRouting(
             "two-tags-allowed-service",
-            setOf("service-id:332", "hardware:c32", "stage:dev", "version:v0.9", "env12")
+            setOf("id:332", "hardware:c32", "stage:dev", "version:v0.9", "env12")
         )
 
         // then
@@ -69,7 +69,7 @@ internal class ServiceTagFilterTest {
         // when
         val routingTags = filter.getAllTagsForRouting(
             "three-tags-allowed-service",
-            setOf("service-id:332", "hardware:c32", "stage:dev", "version:v0.9", "port:3200")
+            setOf("id:332", "hardware:c32", "stage:dev", "version:v0.9", "port:3200")
         )
 
         // then
@@ -91,7 +91,7 @@ internal class ServiceTagFilterTest {
         // when
         val routingTags = filter.getAllTagsForRouting(
             "three-tags-allowed-service",
-            setOf("port:12344", "sid:3333")
+            setOf("port:12344", "id:3333")
         )
 
         // then
