@@ -34,11 +34,16 @@ class ConnectedEnvoyStatusCallback(val properties: SnapshotProperties) : Discove
     }
 
     override fun onStreamRequest(streamId: Long, request: DiscoveryRequest?) {
-        val serviceName = request?.node?.let { it ->
+        val identity = request?.node?.let { it ->
             val metadata = NodeMetadata(it.metadata, properties)
             metadata.identity ?: EMPTY
         } ?: EMPTY
-        connectedEnvoys[streamId] = serviceName
+
+        val serviceName = request?.node?.let { it ->
+            val metadata = NodeMetadata(it.metadata, properties)
+            metadata.serviceName ?: EMPTY
+        } ?: EMPTY
+        connectedEnvoys[streamId] = "identity: " + identity + "serviceName: " + serviceName
     }
 
     override fun onStreamOpen(streamId: Long, typeUrl: String?) {
