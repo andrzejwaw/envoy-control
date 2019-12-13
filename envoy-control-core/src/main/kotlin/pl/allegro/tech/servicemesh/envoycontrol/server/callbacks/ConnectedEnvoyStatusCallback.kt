@@ -1,5 +1,6 @@
 package pl.allegro.tech.servicemesh.envoycontrol.server.callbacks
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.envoyproxy.controlplane.server.DiscoveryServerCallbacks
 import io.envoyproxy.envoy.api.v2.DiscoveryRequest
 import org.slf4j.LoggerFactory
@@ -13,11 +14,14 @@ import java.util.concurrent.TimeUnit
 class ConnectedEnvoyStatusCallback(val properties: SnapshotProperties) : DiscoveryServerCallbacks {
 
     private val logger = LoggerFactory.getLogger(ConnectedEnvoyStatusCallback::class.java)
-    private val executor = Executors.newSingleThreadScheduledExecutor()
     private val connectedEnvoys: ConcurrentHashMap<Long, ServiceName> = ConcurrentHashMap()
+
     private val task: Runnable = Runnable {
         logger.info("Current services connected: {}", connectedEnvoys.values.filter { it.isNotBlank() }.distinct())
     }
+    private val executor = Executors.newSingleThreadScheduledExecutor(
+        ThreadFactoryBuilder().setNameFormat("connected-services-thread-pool").build()
+    )
 
     companion object {
         private const val EMPTY_SERVICE = ""
