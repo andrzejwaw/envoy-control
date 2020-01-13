@@ -69,12 +69,6 @@ internal class EnvoyEgressRoutesFactory(
                             createRouteAction(routeSpecification)
                         )
                 )
-                .setResponseHeadersToAdd(
-                    0, HeaderValueOption.newBuilder().setHeader(
-                        HeaderValue.newBuilder().setKey("x-envoy-upstream-remote-address")
-                            .setValue("%UPSTREAM_REMOTE_ADDRESS%").build()
-                    )
-                )
                 .build()
         }
 
@@ -94,6 +88,13 @@ internal class EnvoyEgressRoutesFactory(
                     )
                 }
             }
+            .setResponseHeadersToAdd(
+                0,
+                HeaderValueOption.newBuilder().setHeader(
+                    HeaderValue.newBuilder().setKey("x-envoy-upstream-remote-address")
+                        .setValue("%UPSTREAM_REMOTE_ADDRESS%").build()
+                )
+            )
             .build()
     }
 
