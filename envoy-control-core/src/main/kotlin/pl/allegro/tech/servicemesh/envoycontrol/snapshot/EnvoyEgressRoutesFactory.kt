@@ -88,8 +88,7 @@ internal class EnvoyEgressRoutesFactory(
                     )
                 }
             }
-            .setResponseHeadersToAdd(
-                0,
+            .addResponseHeadersToAdd(
                 HeaderValueOption.newBuilder().setHeader(
                     HeaderValue.newBuilder().setKey("x-envoy-upstream-remote-address")
                         .setValue("%UPSTREAM_REMOTE_ADDRESS%").build()
